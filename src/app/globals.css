@@ -1,0 +1,57 @@
+/*
+ * Complementos ao CSS do pacote (conteudo/dsp-lp.css, que nao se edita a mao).
+ * O CSS do pacote foi feito para viver dentro de um tema do WordPress e so
+ * estiliza as classes dsp-lp-; o que era do tema fica aqui.
+ */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #fffbfa;
+}
+
+/* As fontes vem do next/font (src/app/layout.tsx), com os mesmos fallbacks do pacote. */
+html .dsp-lp {
+  --dsp-f-titulo: var(--fonte-newsreader), "Newsreader", Georgia, "Times New Roman", serif;
+  --dsp-f-texto: var(--fonte-figtree), "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --dsp-f-giz: "DK Crayon Crumble", var(--fonte-newsreader), "Newsreader", cursive;
+}
+
+/* Formulario: erro de campo e de envio (o pacote nao tinha, porque o Elementor cuidava disso) */
+.dsp-lp-campo__erro {
+  color: #b23b48;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.dsp-lp-campo input[aria-invalid="true"],
+.dsp-lp-campo select[aria-invalid="true"] {
+  border-color: #d9606d;
+}
+
+.dsp-lp-form__falha {
+  background: #fdeeee;
+  border: 1px solid #f7adaf;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 0.95rem;
+}
+
+.dsp-lp-form__falha a {
+  font-weight: 700;
+}
+
+.dsp-lp-botao[disabled] {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+/* Campo-isca contra robo: fica fora da tela e fora da navegacao por teclado */
+.dsp-lp-isca {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
