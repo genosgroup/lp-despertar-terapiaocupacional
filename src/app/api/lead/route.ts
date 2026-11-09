@@ -5,20 +5,30 @@ import {
   type LeadEnviado,
 } from "@/lib/lead";
 import { NOME_DA_PAGINA } from "@/lib/medicao";
+import { WEBHOOK_DO_LEAD } from "@/lib/site";
 
 /**
- * Recebe o lead do formulario, valida e repassa para o destino configurado.
+ * Recebe o lead do formulario, valida e repassa para a automacao do n8n, que
+ * cria o card no Kommo. O lead vai num JSON plano, ja com os nomes dos campos
+ * do Kommo, e o mesmo nas tres paginas da Despertar.
  *
- * O destino ainda nao esta decidido (Kommo direto, n8n, outro). Por isso a
- * rota so faz o repasse para LEAD_WEBHOOK_URL, com o lead num JSON plano e ja
- * com os nomes dos campos do Kommo. Para trocar o destino, mexa so aqui.
+ * Para onde vai:
+ *   - em producao (next build / next start, e no ar): o webhook desta pagina,
+ *     WEBHOOK_DO_LEAD em src/lib/site.ts;
+ *   - em desenvolvimento (next dev): para lugar nenhum, a nao ser que
+ *     LEAD_WEBHOOK_URL esteja definida. Assim ninguem cria lead de teste no
+ *     Kommo da Despertar sem querer;
+ *   - LEAD_WEBHOOK_URL, se definida, vale sobre os dois (para testar com um
+ *     webhook de teste, por exemplo).
  *
- * Variaveis de ambiente (segredo no painel da hospedagem, nunca no repositorio):
- *   LEAD_WEBHOOK_URL    para onde o lead vai (POST JSON)
- *   LEAD_WEBHOOK_TOKEN  opcional; vai como "Authorization: Bearer ..."
+ *   LEAD_WEBHOOK_TOKEN  opcional; vai como "Authorization: Bearer ...". E o que
+ *                       protege o webhook, que esta escrito num repositorio
+ *                       publico: com a autenticacao por cabecalho ligada no n8n,
+ *                       quem tem so o endereco nao consegue mandar lead.
  *
- * Sem LEAD_WEBHOOK_URL a rota responde 503: o formulario mostra a falha com o
- * WhatsApp e NAO conta conversao. Lead nunca e dado como enviado sem ter ido.
+ * Sem destino, ou com o destino fora do ar, a rota responde erro: o formulario
+ * mostra a falha com o WhatsApp e NAO conta conversao. Lead nunca e dado como
+ * enviado sem ter ido.
  */
 
 const LIMITE = 200;
@@ -50,9 +60,11 @@ export async function POST(request: Request) {
     return Response.json({ ok: false, erro: "dados_invalidos", campos: erros }, { status: 422 });
   }
 
-  const destino = process.env.LEAD_WEBHOOK_URL;
+  const destino =
+    process.env.LEAD_WEBHOOK_URL ||
+    (process.env.NODE_ENV === "production" ? WEBHOOK_DO_LEAD : "");
   if (!destino) {
-    console.error("[lead] LEAD_WEBHOOK_URL nao configurada: lead nao repassado");
+    console.error("[lead] sem destino (desenvolvimento sem LEAD_WEBHOOK_URL): lead nao repassado");
     return Response.json({ ok: false, erro: "destino_nao_configurado" }, { status: 503 });
   }
 

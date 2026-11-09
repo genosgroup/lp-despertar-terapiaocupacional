@@ -21,3 +21,12 @@ export const FOTO_PRINCIPAL = "dsp-lp-to-topo.webp";
 
 /** Para onde o formulario manda o lead (com a barra final do trailingSlash). */
 export const ROTA_DO_LEAD = `${BASE_PATH}/api/lead/`;
+
+/**
+ * Webhook do n8n que recebe o lead desta pagina e cria o card no Kommo. Cada
+ * pagina tem o seu (despertar-lp-principal, -fono, -to). O repositorio e
+ * publico, entao este endereco e visivel: a protecao e o LEAD_WEBHOOK_TOKEN
+ * (ver src/app/api/lead/route.ts).
+ */
+export const WEBHOOK_DO_LEAD =
+  "https://webhook.automacaogenosgroup.com.br/webhook/despertar-lp-to";
