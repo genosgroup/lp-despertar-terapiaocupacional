@@ -116,13 +116,15 @@ A página vai como **arquivos estáticos** para a pasta `public_html/terapia-ocu
 Turbo Cloud (cPanel, CloudLinux e LiteSpeed), ao lado do WordPress da Despertar. Pasta
 real tem prioridade sobre os endereços do WordPress, então ele não é tocado.
 
-**Como publicar:** em **Actions > Publicar na Turbo Cloud > Run workflow**. A automação
-roda `npm run build` e envia o `out/` por FTPS com `hospedagem/publicar.sh`, espelhando a
-pasta (arquivos que saíram do pacote são apagados lá) e conferindo, pelo tamanho, se
+**Como publicar:** é automático. Todo push no `main` publica a página (menos mudança só
+em arquivo `.md`, que não muda o site). Para publicar sem push, use **Actions > Publicar
+na Turbo Cloud > Run workflow**. A automação roda `npm run build` e envia o `out/` por
+FTPS com `hospedagem/publicar.sh`, espelhando a pasta (arquivos que saíram do pacote são apagados lá) e conferindo, pelo tamanho, se
 cada arquivo chegou inteiro. A ordem evita página quebrada durante a troca: primeiro os
-arquivos novos (js, css, imagens), depois as páginas, e só no fim a limpeza dos antigos. Trava de segurança: se a pasta já
-existir na hospedagem sem ter sido criada por esta publicação, nada é enviado. Por
-enquanto a automação só roda quando alguém dispara.
+arquivos novos (js, css, imagens), depois as páginas, e só no fim a limpeza dos antigos.
+Trava de segurança: se a pasta já existir na hospedagem sem ter sido criada por esta
+publicação, nada é enviado. Uma publicação de cada vez: se dois pushes chegarem juntos,
+o segundo espera o primeiro terminar.
 
 **Testar a conexão:** **Actions > Testar conexão com a Turbo Cloud > Run workflow**. Só
 lê o servidor e mostra sim/não, sem listar arquivos.
