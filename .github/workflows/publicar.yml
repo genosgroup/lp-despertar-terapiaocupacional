@@ -1,0 +1,47 @@
+name: Publicar na Turbo Cloud
+
+# Gera a página (npm run build -> out/) e envia por SSH para a hospedagem, com
+# hospedagem/publicar.sh. Por enquanto só roda quando alguém dispara:
+# Actions > "Publicar na Turbo Cloud" > Run workflow.
+on:
+  workflow_dispatch:
+
+# Uma publicação de cada vez.
+concurrency:
+  group: publicar-turbo-cloud
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Raiz do site no servidor, relativa à pasta do usuário. Para trocar,
+      # crie a variável DESPERTAR_RAIZ em Settings > Secrets and variables > Actions.
+      RAIZ: ${{ vars.DESPERTAR_RAIZ || 'public_html' }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run build
+
+      - name: Preparar o acesso SSH
+        env:
+          CHAVE: ${{ secrets.DESPERTAR_SSH_KEY }}
+          SENHA: ${{ secrets.DESPERTAR_SSH_PASSPHRASE }}
+          SERVIDOR: ${{ secrets.DESPERTAR_SSH_HOST }}
+          USUARIO: ${{ secrets.DESPERTAR_SSH_USER }}
+          PORTA: ${{ secrets.DESPERTAR_SSH_PORT || vars.DESPERTAR_SSH_PORT }}
+        run: sh hospedagem/preparar-ssh.sh
+
+      - name: Enviar para a hospedagem
+        run: sh hospedagem/publicar.sh destino "$RAIZ"

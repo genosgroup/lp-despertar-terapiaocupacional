@@ -1,7 +1,8 @@
 # Clínica Despertar · Terapia ocupacional
 
-A página de terapia ocupacional infantil do site da Clínica Despertar, em Next.js, servida
-em `despertaresi.com.br/terapia-ocupacional-salvador/`.
+A página de terapia ocupacional infantil do site da Clínica Despertar, em Next.js,
+publicada como site estático na Turbo Cloud e servida em
+`despertaresi.com.br/terapia-ocupacional-salvador/`.
 
 - **Conteúdo:** o `terapia-ocupacional-salvador.html` do pacote aprovado
   `pacote-wordpress-despertar-v2.zip`, anexo da tarefa
@@ -35,15 +36,28 @@ página mora no caminho.
 npm run build && npm run lint
 ```
 
-Em `npm run dev` o formulário **não** manda lead para o n8n, para ninguém criar card de
-teste no Kommo sem querer. Para testar o envio, copie `.env.example` para `.env.local` e
-aponte `LEAD_WEBHOOK_URL` para um webhook de teste.
+`npm run build` gera a página em `out/`, pronta para publicar.
+
+Em `npm run dev` o formulário não envia: quem recebe o lead é um arquivo PHP
+(`public/api/lead/index.php`), e o `next dev` não roda PHP. Assim ninguém cria card de
+teste no Kommo sem querer. Para testar o envio de ponta a ponta, depois do build, monte a
+pasta no caminho da página e sirva com o PHP:
+
+```bash
+mkdir -p /tmp/site && ln -sfn "$PWD/out" /tmp/site/terapia-ocupacional-salvador
+```
+
+```bash
+LEAD_WEBHOOK_URL=https://seu-webhook-de-teste php -S 127.0.0.1:8080 -t /tmp/site
+```
+
+Abra `http://127.0.0.1:8080/terapia-ocupacional-salvador/`.
 
 ## Servida sob um caminho
 
 O `basePath` do `next.config.ts` e o `BASE_PATH` de `src/lib/site.ts` são
 `/terapia-ocupacional-salvador`. Tudo que a página serve mora dentro dele: as imagens
-(`/terapia-ocupacional-salvador/imagens/`), o `/_next/`, a rota do lead
+(`/terapia-ocupacional-salvador/imagens/`), o `/_next/`, o PHP do lead
 (`/terapia-ocupacional-salvador/api/lead/`) e a imagem de compartilhamento. É o que o padrão
 pede para LP servida sob um caminho (§1.3): a rota da hospedagem casa por prefixo, e
 arquivo fora dele nunca chega a esta página.
@@ -64,7 +78,11 @@ ou seja, para a principal. É o esperado.
 | `src/lib/lead.ts` | Campos e validação do formulário. Aqui a pergunta é "Idade da criança" |
 | `src/lib/medicao.ts` | **Todos os IDs de medição.** `NOME_DA_PAGINA = "LP TO"`, `CONTENT_GROUP = "LP · Despertar TO"` |
 | `src/components/` | Página a partir do pacote, formulário, botão fixo do celular e tags. Iguais aos da principal |
-| `src/app/api/lead/route.ts` | Recebe o lead, valida e repassa para o webhook do n8n |
+| `public/api/lead/index.php` | Recebe o lead, valida e repassa para o webhook do n8n. Igual nas três páginas |
+| `public/api/lead/pagina.php` | O nome da página no Kommo ("LP TO") e o webhook desta página |
+| `public/.htaccess` | Cache dos arquivos desta pasta na hospedagem (só cabeçalhos, sem reescrita) |
+| `hospedagem/` | Os scripts da publicação |
+| `.github/workflows/` | As automações de publicação e de teste de conexão |
 | `src/app/page.tsx` | Title e description do LEIA-ME, canonical, Open Graph e dados da clínica |
 
 ## Medição e envio do lead
@@ -75,9 +93,10 @@ de contato no WhatsApp da confirmação), Clarity, e GA4 desligado até a propri
 A explicação completa, com o que muda em relação ao GTM antigo, está no
 [README da principal](https://github.com/genosgroup/lp-despertar-principal#medição).
 
-O formulário manda o lead para a automação do n8n que cria o card no Kommo, pelo webhook
-desta página (`https://webhook.automacaogenosgroup.com.br/webhook/despertar-lp-to`, em
-`src/lib/site.ts`), no mesmo JSON das outras duas páginas. Aqui:
+O formulário manda o lead para `/terapia-ocupacional-salvador/api/lead/` (o `public/api/lead/index.php`),
+que valida e repassa para a automação do n8n que cria o card no Kommo, pelo webhook desta
+página (`https://webhook.automacaogenosgroup.com.br/webhook/despertar-lp-to`, em
+`public/api/lead/pagina.php`), no mesmo JSON das outras duas páginas. Aqui:
 
 - `pagina` é `"LP TO"`, a nota do card no Kommo;
 - `idade` traz a resposta de "Idade da criança" (até 2 anos, 2 a 4, 5 a 7, 8 a 12 ou mais
@@ -86,26 +105,36 @@ desta página (`https://webhook.automacaogenosgroup.com.br/webhook/despertar-lp-
 
 Se o envio falhar, o formulário mostra a falha com o WhatsApp e não conta conversão.
 
-| Variável | Para quê |
-| --- | --- |
-| `LEAD_WEBHOOK_URL` | Opcional. Troca o destino (um webhook de teste, por exemplo). Sem ela, vale o webhook de `src/lib/site.ts` |
-| `LEAD_WEBHOOK_TOKEN` | Opcional. Vai como `Authorization: Bearer ...`. É o que vai proteger o webhook (ver abaixo). Segredo no painel da hospedagem |
+**Proteção do webhook.** O endereço está no código, e este repositório é público. A
+proteção é a mesma das três páginas: Header Auth no n8n e a senha no arquivo
+`.despertar-lp.php`, fora da `public_html`. Passo a passo no
+[README da principal](https://github.com/genosgroup/lp-despertar-principal#formulário-e-envio-do-lead).
 
-**O webhook ainda não está protegido.** O endereço está escrito no código, e este
-repositório é público: quem o encontrar consegue mandar lead falso para o n8n e, de lá,
-para o Kommo. A proteção prevista é ligar a autenticação por cabeçalho no nó de webhook do
-n8n e pôr a mesma senha como segredo `LEAD_WEBHOOK_TOKEN` na hospedagem. O código já manda
-o cabeçalho quando a variável existe.
+## Publicação (Turbo Cloud)
 
+A página vai como **arquivos estáticos** para a pasta `public_html/terapia-ocupacional-salvador/` da
+Turbo Cloud (cPanel, CloudLinux e LiteSpeed), ao lado do WordPress da Despertar. Pasta
+real tem prioridade sobre os endereços do WordPress, então ele não é tocado.
+
+**Como publicar:** em **Actions > Publicar na Turbo Cloud > Run workflow**. A automação
+roda `npm run build` e envia o `out/` por SSH com `hospedagem/publicar.sh`, espelhando a
+pasta (arquivos que saíram do pacote são apagados lá). Trava de segurança: se a pasta já
+existir na hospedagem sem ter sido criada por esta publicação, nada é enviado. Por
+enquanto a automação só roda quando alguém dispara.
+
+**Testar a conexão:** **Actions > Testar conexão com a Turbo Cloud > Run workflow**. Só
+lê o servidor e mostra sim/não, sem listar arquivos.
+
+Os segredos (`DESPERTAR_SSH_KEY`, `DESPERTAR_SSH_PASSPHRASE`, `DESPERTAR_SSH_HOST`,
+`DESPERTAR_SSH_USER` e `DESPERTAR_SSH_PORT`) são os mesmos nos três repositórios e estão
+explicados no
+[README da principal](https://github.com/genosgroup/lp-despertar-principal#publicação-turbo-cloud).
 
 ## Antes de ir ao ar
 
 - [ ] **GA4:** preencher `GA_ID` em `src/lib/medicao.ts` quando a propriedade existir.
-- [ ] **Automação do n8n:** montar o webhook `despertar-lp-to` e proteger com autenticação por
-      cabeçalho + `LEAD_WEBHOOK_TOKEN`. Criar no Kommo o campo "Idade da
+- [ ] **Automação do n8n:** montar o webhook `despertar-lp-to` e protegê-lo (Header Auth + `.despertar-lp.php`). Criar no Kommo o campo "Idade da
       criança".
-- [ ] **Hospedagem e deploy:** ainda não configurados. A rota precisa servir
-      `despertaresi.com.br/terapia-ocupacional-salvador*`.
 - [ ] **Troca de 16/11:** o grupo T.O da /lp1 (`utm_content=203827881070`) redireciona
       para cá mantendo a query string (tabela no LEIA-ME do pacote).
 - [ ] **Card da terapeuta ocupacional:** liberar quando a Mayara mandar nome, foto e

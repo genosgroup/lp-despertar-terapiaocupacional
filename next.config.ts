@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
+  // A pagina e publicada como arquivos estaticos na Turbo Cloud (cPanel +
+  // LiteSpeed), sem Node. `npm run build` gera tudo em out/. O envio do lead e
+  // feito por public/api/lead/index.php. Cache Components (PPR) nao funciona
+  // em exportacao estatica, por isso nao esta ligado.
+  output: "export",
   poweredByHeader: false,
   // A pagina mora em despertaresi.com.br/terapia-ocupacional-salvador/, e tudo que
   // ela serve tem que caber nesse prefixo (§1.3). Igual a BASE_PATH em
@@ -14,7 +17,7 @@ const nextConfig: NextConfig = {
     rules: {
       // O HTML do pacote aprovado (conteudo/*.html) entra no build como texto.
       // Ele e lido em tempo de build e vira componentes React em
-      // src/components/PaginaDoPacote.tsx; nenhum arquivo e lido no servidor.
+      // src/components/PaginaDoPacote.tsx.
       "*.html": { type: "text" },
     },
   },

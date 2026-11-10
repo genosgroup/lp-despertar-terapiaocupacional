@@ -1,0 +1,16 @@
+# Cache dos arquivos desta pagina na Turbo Cloud (LiteSpeed le .htaccess como
+# o Apache). So cabecalhos, de proposito: sem regra de reescrita, o que nao
+# existir nesta pasta continua caindo no WordPress, que mostra a 404 dele.
+<IfModule mod_headers.c>
+  # Scripts, estilos e fontes do Next tem hash no nome: mudou, muda o nome.
+  <FilesMatch "\.(js|css|woff2)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.(webp|jpg|jpeg|png|svg|ico)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
+  # A pagina em si sempre confere se mudou, para uma publicacao nova valer na hora.
+  <FilesMatch "\.(html|txt)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

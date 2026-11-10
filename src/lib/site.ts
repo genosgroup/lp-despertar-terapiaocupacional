@@ -19,14 +19,9 @@ export const URL_DA_PAGINA = "https://despertaresi.com.br/terapia-ocupacional-sa
 /** Foto do topo: carrega primeiro e com prioridade, porque e o LCP no celular. */
 export const FOTO_PRINCIPAL = "dsp-lp-to-topo.webp";
 
-/** Para onde o formulario manda o lead (com a barra final do trailingSlash). */
-export const ROTA_DO_LEAD = `${BASE_PATH}/api/lead/`;
-
 /**
- * Webhook do n8n que recebe o lead desta pagina e cria o card no Kommo. Cada
- * pagina tem o seu (despertar-lp-principal, -fono, -to). O repositorio e
- * publico, entao este endereco e visivel: a protecao e o LEAD_WEBHOOK_TOKEN
- * (ver src/app/api/lead/route.ts).
+ * Para onde o formulario manda o lead: public/api/lead/index.php, que repassa
+ * para o webhook do n8n (endereco em public/api/lead/pagina.php). Com a barra
+ * final: sem ela o servidor redireciona, e o POST se perde.
  */
-export const WEBHOOK_DO_LEAD =
-  "https://webhook.automacaogenosgroup.com.br/webhook/despertar-lp-to";
+export const ROTA_DO_LEAD = `${BASE_PATH}/api/lead/`;

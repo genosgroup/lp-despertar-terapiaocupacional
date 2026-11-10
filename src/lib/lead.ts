@@ -1,7 +1,6 @@
 /**
- * O lead do formulario: campos, opcoes e validacao. Usado pelo formulario
- * (no navegador) e pela rota /api/lead (no servidor), para os dois validarem
- * igual.
+ * O lead do formulario: campos, opcoes e validacao (no navegador). O
+ * public/api/lead/index.php refaz a parte essencial da validacao no servidor.
  */
 
 /**
@@ -63,16 +62,6 @@ export type ErrosDoLead = Partial<Record<Campo, string>>;
 /** So os digitos do telefone. */
 export function digitos(valor: string) {
   return valor.replace(/\D/g, "");
-}
-
-/**
- * Telefone no formato que o Kommo e a Meta casam: com o 55 na frente.
- * Aceita "(71) 99399-6613", "71993996613" e "+55 71 99399-6613".
- */
-export function whatsappComDdi(valor: string) {
-  const d = digitos(valor);
-  if ((d.length === 12 || d.length === 13) && d.startsWith("55")) return d;
-  return `55${d}`;
 }
 
 export function validarLead(lead: Partial<LeadEnviado>): ErrosDoLead {

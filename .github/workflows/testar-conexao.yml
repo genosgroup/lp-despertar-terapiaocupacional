@@ -1,0 +1,29 @@
+name: Testar conexão com a Turbo Cloud
+
+# Entra por SSH na hospedagem e confere o que a publicação precisa (rsync, PHP,
+# pastas, raiz do site). Não publica nada. Rode em Actions > "Testar conexão com
+# a Turbo Cloud" > Run workflow.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Preparar o acesso SSH
+        env:
+          CHAVE: ${{ secrets.DESPERTAR_SSH_KEY }}
+          SENHA: ${{ secrets.DESPERTAR_SSH_PASSPHRASE }}
+          SERVIDOR: ${{ secrets.DESPERTAR_SSH_HOST }}
+          USUARIO: ${{ secrets.DESPERTAR_SSH_USER }}
+          PORTA: ${{ secrets.DESPERTAR_SSH_PORT || vars.DESPERTAR_SSH_PORT }}
+        run: sh hospedagem/preparar-ssh.sh
+
+      - name: Conferir o servidor (só leitura)
+        run: ssh destino 'sh -s' < hospedagem/conferir-servidor.sh
