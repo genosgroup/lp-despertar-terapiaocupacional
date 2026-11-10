@@ -8,7 +8,7 @@ set -u
 
 sim_nao() { if "$@" >/dev/null 2>&1; then echo "sim"; else echo "nao"; fi; }
 
-if ftp_lftp "pwd" >/dev/null 2>&1; then
+if ftp_lftp "quote NOOP" >/dev/null 2>&1; then
   if [ "$FTP_VERIFICA" = "yes" ]; then
     echo "Entrou por FTPS, com o certificado do servidor conferido: sim"
   else
@@ -17,12 +17,12 @@ if ftp_lftp "pwd" >/dev/null 2>&1; then
 else
   VERIFICA_ORIGINAL="$FTP_VERIFICA"
   FTP_VERIFICA="no"
-  if ftp_lftp "pwd" >/dev/null 2>&1; then
+  if ftp_lftp "quote NOOP" >/dev/null 2>&1; then
     echo "Entrou por FTPS: sim, mas o certificado do servidor NAO confere com o nome em DESPERTAR_SSH_HOST"
     echo "(a publicacao exige certificado conferido; use o nome que aparece no certificado)"
   else
     echo "Entrou por FTPS: NAO. Confira DESPERTAR_FTP_USER, DESPERTAR_FTP_PASSWORD e se a conta FTP existe."
-    ftp_lftp "pwd" 2>&1 | tail -3
+    ftp_lftp "quote NOOP" 2>&1 | tail -3
     exit 1
   fi
   FTP_VERIFICA="$VERIFICA_ORIGINAL"
