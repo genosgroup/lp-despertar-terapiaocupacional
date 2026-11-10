@@ -60,18 +60,37 @@ ftp_pendentes() {
   printf '%s\n' "$saida" | grep -cE '^(get|rm) ' || true
 }
 
-# ftp_espelhar <pasta local> <pasta no servidor> [opcoes do mirror]: envia e
-# confere, pelo tamanho, se cada arquivo chegou inteiro. O que nao bater e
-# reenviado uma vez; se ainda nao bater, falha (e a publicacao para).
-ftp_espelhar() {
-  origem="$1"; destino="$2"; shift 2
-  ftp_lftp "mirror -R --no-perms --parallel=3 $* $origem $destino"
-  pendentes=$(ftp_pendentes "$@" "$origem" "$destino") || { echo "Nao deu para conferir $destino depois do envio." >&2; return 1; }
+# ftp_conferir <pasta local> <pasta no servidor> [opcoes do mirror]: falha se
+# algum arquivo nao estiver no servidor com o mesmo tamanho (ou, com --delete,
+# se sobrar algum que saiu do pacote).
+ftp_conferir() {
+  for remoto in "$@"; do :; done
+  pendentes=$(ftp_pendentes "$@") || { echo "Nao deu para conferir $remoto no servidor." >&2; return 1; }
   [ "$pendentes" = 0 ] && return 0
-  echo "$pendentes arquivo(s) de $destino chegaram diferentes; reenviando so esses." >&2
-  ftp_lftp "mirror -R --ignore-time --no-perms $* $origem $destino"
-  pendentes=$(ftp_pendentes "$@" "$origem" "$destino") || { echo "Nao deu para conferir $destino depois do reenvio." >&2; return 1; }
-  [ "$pendentes" = 0 ] && return 0
-  echo "$pendentes arquivo(s) de $destino continuam diferentes no servidor. Publicacao interrompida." >&2
+  echo "$pendentes arquivo(s) de $remoto nao conferem com o pacote." >&2
   return 1
+}
+
+# ftp_enviar <pasta local> <pasta no servidor> [opcoes do mirror]: envia sem
+# apagar nada, na ordem que nao deixa a pagina quebrada no meio do caminho:
+# primeiro os arquivos que as paginas usam (js, css, fontes, imagens), depois
+# as paginas (.html, e os .txt que o Next le na navegacao). Depois confere,
+# pelo tamanho, se cada arquivo chegou inteiro; o que nao bater e reenviado
+# uma vez e, se ainda nao bater, falha (e a publicacao para).
+ftp_enviar() {
+  origem="$1"; destino="$2"; shift 2
+  ftp_lftp "mirror -R --no-perms --parallel=3 -X '*.html' -X '*.txt' $* $origem $destino"
+  ftp_lftp "mirror -R --no-perms --parallel=3 -I '*.html' -I '*.txt' $* $origem $destino"
+  ftp_conferir "$@" "$origem" "$destino" 2>/dev/null && return 0
+  echo "Algum arquivo de $destino chegou diferente; reenviando so o que difere." >&2
+  ftp_lftp "mirror -R --ignore-time --no-perms $* $origem $destino"
+  ftp_conferir "$@" "$origem" "$destino"
+}
+
+# ftp_limpar <pasta local> <pasta no servidor>: apaga do servidor o que saiu
+# do pacote. Roda por ultimo, quando as paginas novas ja estao no lugar, para
+# ninguem abrir uma pagina que aponta para um arquivo ja apagado.
+ftp_limpar() {
+  ftp_lftp "mirror -R --delete --no-perms $1 $2"
+  ftp_conferir --delete "$1" "$2"
 }

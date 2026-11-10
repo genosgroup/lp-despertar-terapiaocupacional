@@ -119,7 +119,8 @@ real tem prioridade sobre os endereços do WordPress, então ele não é tocado.
 **Como publicar:** em **Actions > Publicar na Turbo Cloud > Run workflow**. A automação
 roda `npm run build` e envia o `out/` por FTPS com `hospedagem/publicar.sh`, espelhando a
 pasta (arquivos que saíram do pacote são apagados lá) e conferindo, pelo tamanho, se
-cada arquivo chegou inteiro. Trava de segurança: se a pasta já
+cada arquivo chegou inteiro. A ordem evita página quebrada durante a troca: primeiro os
+arquivos novos (js, css, imagens), depois as páginas, e só no fim a limpeza dos antigos. Trava de segurança: se a pasta já
 existir na hospedagem sem ter sido criada por esta publicação, nada é enviado. Por
 enquanto a automação só roda quando alguém dispara.
 

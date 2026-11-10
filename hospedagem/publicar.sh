@@ -1,7 +1,8 @@
 #!/bin/sh
 # Envia a pagina exportada (out/, gerada por `npm run build`) para a hospedagem,
 # por FTPS, e confere pelo tamanho se cada arquivo chegou inteiro. A conta FTP
-# tem a raiz na public_html do site.
+# tem a raiz na public_html do site. Ordem: arquivos novos, depois as paginas,
+# por ultimo a limpeza dos antigos (ver ftp_enviar em ftp-comum.sh).
 #
 # Uso: sh hospedagem/publicar.sh   (com FTP_HOST, FTP_USER e FTP_PASSWORD no ambiente)
 #
@@ -23,5 +24,6 @@ if ftp_existe "$PASTA" && ! ftp_existe "$PASTA/$MARCA"; then
 fi
 
 touch "out/$MARCA"
-ftp_espelhar out/ "$PASTA/" --delete
+ftp_enviar out/ "$PASTA/"
+ftp_limpar out/ "$PASTA/"
 echo "Publicado em $PASTA/"
