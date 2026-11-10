@@ -73,8 +73,9 @@ foto em `public/imagens/`. Passo a passo no `README.md`.
 **Publicação:** Turbo Cloud (cPanel + LiteSpeed), como **site estático** (`output: "export"`,
 sem Node e sem Cache Components, que não funciona em exportação). O envio do lead é o
 `public/api/lead/index.php` (igual nas três páginas; o que muda fica em `pagina.php`), não
-uma rota do Next. Quem publica é o GitHub Actions, por SSH, com os scripts de
-`hospedagem/`. Não crie rota de servidor no Next (route handler com POST, server action):
+uma rota do Next. Quem publica é o GitHub Actions, por FTPS (o firewall da Turbo Cloud
+barra SSH vindo do GitHub), com os scripts de `hospedagem/`, que conferem cada arquivo
+depois do envio. Não crie rota de servidor no Next (route handler com POST, server action):
 ela não existe no site publicado.
 
 O HTML e o CSS da página vêm do pacote aprovado e ficam em `conteudo/`, sem edição à mão.

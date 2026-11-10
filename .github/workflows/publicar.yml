@@ -1,8 +1,8 @@
 name: Publicar na Turbo Cloud
 
-# Gera a página (npm run build -> out/) e envia por SSH para a hospedagem, com
-# hospedagem/publicar.sh. Por enquanto só roda quando alguém dispara:
-# Actions > "Publicar na Turbo Cloud" > Run workflow.
+# Gera a página (npm run build -> out/) e envia por FTPS para a hospedagem, com
+# hospedagem/publicar.sh, que confere pelo tamanho cada arquivo enviado. Por
+# enquanto só roda quando alguém dispara: Actions > "Publicar na Turbo Cloud" > Run workflow.
 on:
   workflow_dispatch:
 
@@ -18,10 +18,6 @@ jobs:
   publicar:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      # Raiz do site no servidor, relativa à pasta do usuário. Para trocar,
-      # crie a variável DESPERTAR_RAIZ em Settings > Secrets and variables > Actions.
-      RAIZ: ${{ vars.DESPERTAR_RAIZ || 'public_html' }}
     steps:
       - uses: actions/checkout@v5
 
@@ -34,14 +30,13 @@ jobs:
 
       - run: npm run build
 
-      - name: Preparar o acesso SSH
-        env:
-          CHAVE: ${{ secrets.DESPERTAR_SSH_KEY }}
-          SENHA: ${{ secrets.DESPERTAR_SSH_PASSPHRASE }}
-          SERVIDOR: ${{ secrets.DESPERTAR_SSH_HOST }}
-          USUARIO: ${{ secrets.DESPERTAR_SSH_USER }}
-          PORTA: ${{ secrets.DESPERTAR_SSH_PORT || vars.DESPERTAR_SSH_PORT }}
-        run: sh hospedagem/preparar-ssh.sh
+      - name: Instalar o lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
 
       - name: Enviar para a hospedagem
-        run: sh hospedagem/publicar.sh destino "$RAIZ"
+        env:
+          FTP_HOST: ${{ secrets.DESPERTAR_FTP_HOST || secrets.DESPERTAR_SSH_HOST }}
+          FTP_USER: ${{ secrets.DESPERTAR_FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.DESPERTAR_FTP_PASSWORD }}
+          FTP_PORTA: ${{ vars.DESPERTAR_FTP_PORT || '21' }}
+        run: sh hospedagem/publicar.sh

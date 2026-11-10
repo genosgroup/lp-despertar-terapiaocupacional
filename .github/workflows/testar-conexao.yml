@@ -1,8 +1,8 @@
 name: Testar conexão com a Turbo Cloud
 
-# Entra por SSH na hospedagem e confere o que a publicação precisa (rsync, PHP,
-# pastas, raiz do site). Não publica nada. Rode em Actions > "Testar conexão com
-# a Turbo Cloud" > Run workflow.
+# Entra por FTPS na hospedagem e confere o que a publicação precisa (login,
+# certificado, raiz do site, o que já existe nela, permissão de gravar). Não
+# publica nada. Rode em Actions > "Testar conexão com a Turbo Cloud" > Run workflow.
 on:
   workflow_dispatch:
 
@@ -16,14 +16,18 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Preparar o acesso SSH
+      - name: Diagnosticar a rede (sem entrar no servidor)
         env:
-          CHAVE: ${{ secrets.DESPERTAR_SSH_KEY }}
-          SENHA: ${{ secrets.DESPERTAR_SSH_PASSPHRASE }}
-          SERVIDOR: ${{ secrets.DESPERTAR_SSH_HOST }}
-          USUARIO: ${{ secrets.DESPERTAR_SSH_USER }}
-          PORTA: ${{ secrets.DESPERTAR_SSH_PORT || vars.DESPERTAR_SSH_PORT }}
-        run: sh hospedagem/preparar-ssh.sh
+          SERVIDOR: ${{ secrets.DESPERTAR_FTP_HOST || secrets.DESPERTAR_SSH_HOST }}
+        run: bash hospedagem/diagnosticar-rede.sh
 
-      - name: Conferir o servidor (só leitura)
-        run: ssh destino 'sh -s' < hospedagem/conferir-servidor.sh
+      - name: Instalar o lftp
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+
+      - name: Conferir o servidor (só leitura e um arquivo de teste apagado na hora)
+        env:
+          FTP_HOST: ${{ secrets.DESPERTAR_FTP_HOST || secrets.DESPERTAR_SSH_HOST }}
+          FTP_USER: ${{ secrets.DESPERTAR_FTP_USER }}
+          FTP_PASSWORD: ${{ secrets.DESPERTAR_FTP_PASSWORD }}
+          FTP_PORTA: ${{ vars.DESPERTAR_FTP_PORT || '21' }}
+        run: sh hospedagem/conferir-servidor.sh

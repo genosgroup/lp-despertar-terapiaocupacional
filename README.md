@@ -117,17 +117,17 @@ Turbo Cloud (cPanel, CloudLinux e LiteSpeed), ao lado do WordPress da Despertar.
 real tem prioridade sobre os endereços do WordPress, então ele não é tocado.
 
 **Como publicar:** em **Actions > Publicar na Turbo Cloud > Run workflow**. A automação
-roda `npm run build` e envia o `out/` por SSH com `hospedagem/publicar.sh`, espelhando a
-pasta (arquivos que saíram do pacote são apagados lá). Trava de segurança: se a pasta já
+roda `npm run build` e envia o `out/` por FTPS com `hospedagem/publicar.sh`, espelhando a
+pasta (arquivos que saíram do pacote são apagados lá) e conferindo, pelo tamanho, se
+cada arquivo chegou inteiro. Trava de segurança: se a pasta já
 existir na hospedagem sem ter sido criada por esta publicação, nada é enviado. Por
 enquanto a automação só roda quando alguém dispara.
 
 **Testar a conexão:** **Actions > Testar conexão com a Turbo Cloud > Run workflow**. Só
 lê o servidor e mostra sim/não, sem listar arquivos.
 
-Os segredos (`DESPERTAR_SSH_KEY`, `DESPERTAR_SSH_PASSPHRASE`, `DESPERTAR_SSH_HOST`,
-`DESPERTAR_SSH_USER` e `DESPERTAR_SSH_PORT`) são os mesmos nos três repositórios e estão
-explicados no
+Os segredos (`DESPERTAR_SSH_HOST`, `DESPERTAR_FTP_USER` e `DESPERTAR_FTP_PASSWORD`) são
+os mesmos nos três repositórios e estão explicados no
 [README da principal](https://github.com/genosgroup/lp-despertar-principal#publicação-turbo-cloud).
 
 ## Antes de ir ao ar
